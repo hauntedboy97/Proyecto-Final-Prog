@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace ProyectoFinal_CordobaIsmael2
+namespace ProyectoFinal
 {
     internal class Program
     {
