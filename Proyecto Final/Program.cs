@@ -1,11 +1,9 @@
-﻿using static Proyecto_Final.Program;
-using System.Collections.Generic;
-
-namespace Proyecto_Final
+namespace ProyectoFinal_CordobaIsmael2
 {
     internal class Program
     {
         static List<Alumno> alumnos = new List<Alumno>();
+        static List<Materia> materias = new List<Materia>();
         public static string archivo = "Lista de Alumnos.txt";
         public static string archivo2 = "Materias Cursadas.txt";
         public static string archivo3 = "Materias.txt";
@@ -79,7 +77,7 @@ namespace Proyecto_Final
                     break;
                 }
             }
-            
+
             if (!alumnoExistente)
             {
                 Console.WriteLine("Ingrese el apellido del alumno: ");
@@ -127,7 +125,117 @@ namespace Proyecto_Final
                     }
                 }
             }
-            
+
+        }
+        static void AltaMateria()
+        {
+            int numerodemateria = LeerEntero("Ingrese el DNI para comenzar la operación: ");
+            RetornarListaAlumnos(archivo);
+            bool materiaExistente = false;
+            Materia materiaEncontrada = new Materia();
+            materiaEncontrada.estaActiva = true;
+            for (int i = 0; i < alumnos.Count; i++)
+            {
+                if (alumnos[i].DNI == Convert.ToString(numerodemateria))
+                {
+                    materiaExistente = true;
+                    materiaEncontrada.indiceMateria = alumnos[i].Legajo;
+                    materiaEncontrada.nombreMateria = alumnos[i].;
+                    materiaEncontrada.estaActiva = false;
+                    break;
+                }
+            }
+
+            if (!materiaExistente)
+            {
+                Console.WriteLine("Ingrese el apellido del alumno: ");
+                string apellido = Console.ReadLine();
+                Console.WriteLine("Ingrese el nombre del alumno: ");
+                string nombre = Console.ReadLine();
+                Console.WriteLine("Ingrese la fecha de nacimiento del alumno: ");
+                DateTime fechaNacimiento = Convert.ToDateTime(Console.ReadLine());
+                Console.WriteLine("Ingrese el domicilio del alumno: ");
+                string Domicilio = Console.ReadLine();
+                int nuevoIndice = alumnos.Count + 1;
+                Alumno nuevoAlumno = new Alumno
+                {
+                    Legajo = nuevoIndice,
+                    Nombre = nombre,
+                    Apellido = apellido,
+                    DNI = Convert.ToString(dni),
+                    fechaNacimiento = fechaNacimiento,
+                    Domicilio = Domicilio,
+                    estaActivo = true,
+                };
+                alumnos.Add(nuevoAlumno);
+                GuardarAlumnosEnArchivo();
+                Console.WriteLine("Alumno dado de alta exitosamente.\n -------------------------------------------------------------------");
+            }
+            else
+            {
+                if (materiaEncontrada.estaActiva)
+                {
+                    Console.WriteLine("ERROR: Ya existe un alumno activo con el mismo DNI.\n ---------------------------------------------------");
+                }
+                else
+                {
+                    Console.Write("El alumno ya existe pero está inactivo. ¿Desea reactivarlo? (S/N): ");
+                    string respuesta = Console.ReadLine();
+                    if ((respuesta == "S") || (respuesta == "s"))
+                    {
+                        materiaEncontrada.estaActiva = true;
+                        GuardarAlumnosEnArchivo();
+                        Console.WriteLine("Alumno reactivado exitosamente.\n --------------------------------------------------------------");
+                    }
+                    else
+                    {
+                        Console.WriteLine("El alumno no se ha activado.\n --------------------------------------------------------------");
+                    }
+                }
+            }
+
+        }
+
+        static void MenuMaterias()
+        {
+            do
+            {
+
+                Console.WriteLine("===== MENU =====");
+                Console.WriteLine("Dar alta de materia: ");
+            }
+        }
+
+        public static List<Materia>RetronarListaMateria(string archivo2)
+        {
+            List<Materia> listaMateria = new List<Materia>();
+            using (StreamReader sr = new StreamReader(archivo2))
+            {
+                string? linea = sr.ReadLine();
+
+                while (linea != null)
+                {
+                    string[] MateriaArchivo = linea.Split(',');
+                    Materia materiaStruct = new Materia();
+                    materiaStruct.indiceMateria = int.Parse(MateriaArchivo[0]);
+                    materiaStruct.nombreMateria = MateriaArchivo[1];
+                    materiaStruct.estaActiva = Convert.ToBoolean(MateriaArchivo[2]);
+                    listaMateria.Add(materiaStruct);
+                    linea = sr.ReadLine();
+                }
+            }
+            return listaMateria;
+        }
+
+        static void GuardarAMateriaEnArchivo()
+        {
+            using (StreamWriter writer = new StreamWriter(archivo2, true))
+            {
+                foreach (var materia in materias)
+                {
+                    writer.WriteLine($"{materia.indiceMateria}, {materia.nombreMateria}, {materia.estaActiva}");
+                }
+            }
         }
 
         static void GuardarAlumnosEnArchivo()
@@ -155,7 +263,7 @@ namespace Proyecto_Final
                         Nombre = separador[1],
                         Apellido = separador[2],
                         DNI = separador[3],
-                        fechaNacimiento = DateTime.Parse(separador[4]), 
+                        fechaNacimiento = DateTime.Parse(separador[4]),
                         Domicilio = separador[5],
                         estaActivo = bool.Parse(separador[6])
                     };
@@ -193,8 +301,8 @@ namespace Proyecto_Final
         static int EstadoAlumno()
         {
             int numero = 0;
-            
-                return numero;
+
+            return numero;
         }
 
         static void ModificarAlumno()
@@ -310,7 +418,7 @@ namespace Proyecto_Final
         }
         static void Main(string[] args)
         {
-
+            CrearMaterias();
             int numEj = 0;
 
             do
@@ -354,5 +462,6 @@ namespace Proyecto_Final
                 }*/
             } while (numEj != 0);
         }
+
     }
 }
