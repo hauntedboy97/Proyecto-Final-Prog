@@ -1,13 +1,13 @@
 using System;
 using System.Net;
 
-namespace ProyectoFinal_CordobaIsmael2
+namespace ProyectoFinal
 {
     internal class Program
     {
         static List<Alumno> alumnos = new List<Alumno>();
         static List<Materia> materias = new List<Materia>();
-        static List<AlumnoMateria> alumnosEnMaterias= new List<AlumnoMateria>();
+        static List<AlumnoMateria> alumnosEnMaterias = new List<AlumnoMateria>();
         public static string archivo = "Lista de Alumnos.txt";
         public static string archivo2 = "Materias Cursadas.txt";
         public static string archivo3 = "Materias.txt";
@@ -35,7 +35,7 @@ namespace ProyectoFinal_CordobaIsmael2
             public int IndiceAlumno;
             public int IndiceMateria;
             public string Estado;
-            public int Nota;
+            public string Nota;
             public DateTime Fecha;
         }
         static int LeerEntero(string Mensaje)
@@ -74,7 +74,7 @@ namespace ProyectoFinal_CordobaIsmael2
             return alumnoExistente;
         }
 
-        static Alumno buscarAlumno(int dni)
+        static Alumno BuscarAlumno(int dni)
         {
             Alumno alumnoEncontrado = new Alumno();
             alumnoEncontrado.estaActivo = true;
@@ -98,20 +98,57 @@ namespace ProyectoFinal_CordobaIsmael2
             return alumnoEncontrado;
         }
 
-        static void AltaAlumno() // preguntar si esta bien la reactivacion
+        static bool ExisteMateria(string nombreDeMateria)
+        {
+            bool materiaExistente = false;
+            int i = 0;
+            while (!materiaExistente && i < materias.Count)
+            {
+                if (materias[i].nombreMateria == nombreDeMateria)
+                {
+                    materiaExistente = true;
+                }
+                i++;
+            }
+            return materiaExistente;
+        }
+
+
+        static Materia BuscarMateria(string nombreDeMateria)
+        {
+            Materia materiaEncontrada = new Materia();
+            materiaEncontrada.estaActiva = true;
+            bool materiaExistente = false;
+            int i = 0;
+            while (!materiaExistente && i < materias.Count)
+            {
+                if (materias[i].nombreMateria == nombreDeMateria)
+                {
+                    materiaExistente = true;
+                    materiaEncontrada.indiceMateria = materias[i].indiceMateria;
+                    materiaEncontrada.nombreMateria = materias[i].nombreMateria;
+                    materiaEncontrada.estaActiva = materias[i].estaActiva;
+                }
+                i++;
+            }
+            return materiaEncontrada;
+        }
+
+
+        static void AltaAlumno()
         {
             int dni = LeerEntero("Ingrese el DNI para comenzar la operación: ");
             CargarAlumnosDesdeArchivo();
-            
 
-            if (! ExisteAlumno(dni))
+
+            if (!ExisteAlumno(dni))
             {
 
                 Console.WriteLine("Ingrese el apellido del alumno: ");
                 string apellido = Console.ReadLine();
                 Console.WriteLine("Ingrese el nombre del alumno: ");
                 string nombre = Console.ReadLine();
-                Console.WriteLine("Ingrese la fecha de nacimiento del alumno: ");
+                Console.WriteLine("Ingrese la fecha de nacimiento del alumno, colocando las barras. Ej = dd/mm/aaaa: ");
                 DateTime fechaNacimiento = Convert.ToDateTime(Console.ReadLine());
                 Console.WriteLine("Ingrese el domicilio del alumno: ");
                 string Domicilio = Console.ReadLine();
@@ -132,7 +169,7 @@ namespace ProyectoFinal_CordobaIsmael2
             }
             else
             {
-                Alumno alumnoEncontrado = buscarAlumno(dni);
+                Alumno alumnoEncontrado = BuscarAlumno(dni);
                 if (alumnoEncontrado.estaActivo)
                 {
                     Console.WriteLine("ERROR: Ya existe un alumno activo con el mismo DNI.\n ---------------------------------------------------");
@@ -143,46 +180,35 @@ namespace ProyectoFinal_CordobaIsmael2
                     string respuesta = Console.ReadLine();
                     if ((respuesta == "S") || (respuesta == "s"))
                     {
-                        alumnoEncontrado.estaActivo = true;
-                        GuardarAlumnosEnArchivo();
+                        for (int i = 0; i < alumnos.Count; i++)
+                        {
+                            Alumno alumno = alumnos[i];
+                            alumno.estaActivo = true;
+                            alumnos[i] = alumno;
+                            GuardarAlumnosEnArchivo();
+                        }
                         Console.WriteLine("Alumno reactivado exitosamente.\n --------------------------------------------------------------");
                     }
                     else
                     {
-                        Console.WriteLine("El alumno no se ha activado.\n --------------------------------------------------------------");
+                        Console.WriteLine("El alumno no se ha reactivado.\n --------------------------------------------------------------");
                     }
                 }
             }
-
+            Console.WriteLine();
         }
         static void AltaMateria()
         {
             Console.Write("Ingrese el nombre de la materia que desea agregar: ");
-            string nombredemateria  = Console.ReadLine();
+            string nombreDeMateria = Console.ReadLine();
             CargarMateriaDesdeArchivo();
-            bool materiaExistente = false;
-            Materia materiaEncontrada = new Materia();
-            materiaEncontrada.estaActiva = true;
-            for (int i = 0; i < alumnos.Count; i++)
+            if (!ExisteMateria(nombreDeMateria))
             {
-                if (materias[i].nombreMateria == nombredemateria)
-                {
-                    materiaExistente = true;
-                    materiaEncontrada.indiceMateria = materias[i].indiceMateria;
-                    materiaEncontrada.nombreMateria = materias[i].nombreMateria;
-                    materiaEncontrada.estaActiva = materias[i].estaActiva;
-                    break;
-                }
-            }
-
-            if (!materiaExistente)
-            {
-                
                 int nuevoIndice = materias.Count + 1;
                 Materia nuevaMateria = new Materia
                 {
                     indiceMateria = nuevoIndice,
-                    nombreMateria = nombredemateria,
+                    nombreMateria = nombreDeMateria,
                     estaActiva = true,
                 };
                 materias.Add(nuevaMateria);
@@ -191,30 +217,36 @@ namespace ProyectoFinal_CordobaIsmael2
             }
             else
             {
+                Materia materiaEncontrada = BuscarMateria(nombreDeMateria);
                 if (materiaEncontrada.estaActiva)
                 {
-                    Console.WriteLine("ERROR: Ya existe una nateria activa con el mismo nombre.\n ---------------------------------------------------");
+                    Console.WriteLine("ERROR: Ya existe una materia activa con el mismo nombre.\n ---------------------------------------------------");
                 }
                 else
                 {
-                    Console.Write("La materia ya existe pero está inactiva. ¿Desea reactivarla? (S/N): ");
+                    Console.Write("La materia ya existe pero esta inactiva. ¿Desea reactivarla? (S/N): ");
                     string respuesta = Console.ReadLine();
                     if ((respuesta == "S") || (respuesta == "s"))
                     {
-                        materiaEncontrada.estaActiva = true;
-                        GuardarMateriaEnArchivo();
-                        Console.WriteLine("Alumno reactivado exitosamente.\n --------------------------------------------------------------");
+                        for (int i = 0; i < materias.Count; i++)
+                        {
+                            Materia materia = materias[i];
+                            materia.estaActiva = true;
+                            materias[i] = materia;
+                            GuardarMateriaEnArchivo();
+                        }
+                        Console.WriteLine("Materia reactivada exitosamente.\n --------------------------------------------------------------");
                     }
                     else
                     {
-                        Console.WriteLine("La materia no se ha activado.\n --------------------------------------------------------------");
+                        Console.WriteLine("La materia no se ha reactivado.\n --------------------------------------------------------------");
                     }
                 }
             }
-
+            Console.WriteLine();
         }
 
-        
+
 
         public static List<Materia> RetornarListaMateria(string archivo2)
         {
@@ -250,11 +282,21 @@ namespace ProyectoFinal_CordobaIsmael2
 
         static void GuardarAlumnosEnArchivo()
         {
-            using (StreamWriter writer = new(archivo, true))
+            using (StreamWriter writer = new(archivo, false))
             {
                 foreach (var alumno in alumnos)
                 {
                     writer.WriteLine($"{alumno.Legajo}, {alumno.Nombre}, {alumno.Apellido}, {alumno.DNI}, {alumno.fechaNacimiento:dd/MM/yyyy}, {alumno.Domicilio}, {alumno.estaActivo}");
+                }
+            }
+        }
+        static void GuardarAlumnoMateriaEnArchivo()
+        {
+            using (StreamWriter writer = new StreamWriter(archivo2, true))
+            {
+                foreach (var indice in alumnosEnMaterias)
+                {
+                    writer.WriteLine($"{indice.IndiceAlumno}, {indice.IndiceMateria}, {indice.IndiceAlumnoMateria}, {indice.Estado}, {indice.Nota}, {indice.Fecha}");
                 }
             }
         }
@@ -285,6 +327,7 @@ namespace ProyectoFinal_CordobaIsmael2
 
         static void CargarMateriaDesdeArchivo()
         {
+            materias.Clear();
             if (File.Exists(archivo2))
             {
                 string[] lineas = File.ReadAllLines(archivo2);
@@ -304,120 +347,151 @@ namespace ProyectoFinal_CordobaIsmael2
 
         static void BajaAlumno()
         {
+            CargarAlumnosDesdeArchivo();
             int dni = LeerEntero("Ingrese el DNI del alumno que desea dar de baja: ");
-            using (StreamWriter escritor = new StreamWriter(archivo, false))
+
+            if (!ExisteAlumno(dni))
             {
-                List<Alumno> alumnos = RetornarListaAlumnos(archivo);
-                bool existe = false;
-                Alumno alumnos2 = new Alumno();
-                for (int i = 0; i < alumnos.Count; i++)
+                Console.WriteLine("ERROR: No existe alumno con ese dni.\n------------------------------------------------------------------------------------");
+            }
+            else
+            {
+                Alumno alumoEncontrado = BuscarAlumno(dni);
+                Console.Write($"El alumno que desea modificar es{alumoEncontrado.Nombre}{alumoEncontrado.Apellido}? S/N: ");
+                string respuesta = Console.ReadLine();
+                if (respuesta == "s" || respuesta == "S")
                 {
-                    if (alumnos[i].DNI == Convert.ToString(dni))
+                    for (int i = 0; i < alumnos.Count; i++)
                     {
-                        existe = true;
+                        if (int.Parse(alumnos[i].DNI) == (dni))
+                        {
+                            Alumno alumno = alumnos[i];
+                            alumno.estaActivo = false;
+                            alumnos[i] = alumno;
+                            Console.WriteLine("Alumno dado de baja correctamente.\n----------------------------------------------------------------------------");
+
+                        }
                     }
                 }
-                if (existe)
+                else
                 {
-                    alumnos2.estaActivo = false;
+                    Console.WriteLine("Se ha cancelado la operación.\n------------------------------------------------------------------------------");
                 }
-
                 GuardarAlumnosEnArchivo();
-
             }
+            Console.WriteLine();
         }
 
         static void BajaMateria()
         {
             Console.Write("Ingrese el nombre de la materia que quiere dar de baja");
-            string nombreMateria = Console.ReadLine();
-            
-            using (StreamWriter escritor = new StreamWriter(archivo2, true))
+            string nombreDeMateria = Console.ReadLine();
+            CargarMateriaDesdeArchivo();
+            if (!ExisteMateria(nombreDeMateria))
             {
-                List<Materia> Materias = RetornarListaMateria(archivo2);
-                bool existe = false;
-                Materia Materia2 = new Materia();
-                for (int i = 0; i < Materias.Count; i++)
+                Console.WriteLine("ERROR: No existe una materia con ese nombre.\n------------------------------------------------------------------------------------");
+            }
+            else
+            {
+                Materia materiaEncontrada = BuscarMateria(nombreDeMateria);
+                Console.Write($"La materia que desea modificar es{materiaEncontrada.nombreMateria}? S/N: ");
+                string respuesta = Console.ReadLine();
+                if (respuesta == "s" || respuesta == "S")
                 {
-                    if (materias[i].nombreMateria == nombreMateria)
+                    for (int i = 0; i < materias.Count; i++)
                     {
-                        existe = true;
+                        if (materias[i].nombreMateria == nombreDeMateria)
+                        {
+                            Materia materia = materias[i];
+                            materia.estaActiva = false;
+                            materias[i] = materia;
+                            Console.WriteLine("Materia dada de baja correctamente.\n----------------------------------------------------------------------------");
+
+                        }
                     }
                 }
-                if (existe)
+                else
                 {
-                    Materia2.estaActiva = false;
+                    Console.WriteLine("Se ha cancelado la operación.\n------------------------------------------------------------------------------");
                 }
-
                 GuardarMateriaEnArchivo();
-
             }
+            Console.WriteLine();
         }
-    
+
 
         static void ModificarAlumno()  //Como modificar un alumno, como transcribirlo
         {
-            string respuesta;
-            int numerodni = LeerEntero("Ingrese el numero de dni del alumno que desea eliminar: ");
-            using (StreamWriter escritor = new StreamWriter(archivo, false))
+            int numerodni = LeerEntero("Ingrese el numero de dni del alumno que desea modificar: ");
+
+            CargarAlumnosDesdeArchivo();
+            Alumno alumnos2 = BuscarAlumno(numerodni);
+            if (ExisteAlumno(numerodni))
             {
-                CargarAlumnosDesdeArchivo();
-                bool existe = false;
-                Alumno alumnos2 = new Alumno();
-                for (int i = 0; i < alumnos.Count; i++)
+                Console.Write($"El alumno a modificar es {alumnos2.Apellido} {alumnos2.Nombre}? S/N: ");
+                string respuesta = Console.ReadLine();
+                if ((respuesta == "s") || (respuesta == "S"))
                 {
-                    if (alumnos[i].DNI == Convert.ToString(numerodni))
-                    {
-                        alumnos2.Legajo = alumnos[i].Legajo;
-                        alumnos2.Nombre = alumnos[i].Nombre;
-                        alumnos2.Apellido = alumnos[i].Apellido;
-                        alumnos2.DNI = Convert.ToString(numerodni);
-                        alumnos2.Domicilio = alumnos[i].Domicilio;
-                        alumnos2.fechaNacimiento = alumnos[i].fechaNacimiento;
-                        alumnos2.estaActivo = alumnos[i].estaActivo;
-                        existe = true;
-                        alumnos.Remove(alumnos[i]);
-                    }
+                    /*alumnos2.Legajo = BuscarAlumno(numerodni).Legajo;*/
+                    Console.Write("Reingrese el nombre del alumno: ");
+                    alumnos2.Nombre = Console.ReadLine();
+                    Console.Write("Reingrese el apellido: ");
+                    alumnos2.Apellido = Console.ReadLine();
+                    alumnos2.DNI = Convert.ToString(LeerEntero("Reingrese el dni del alumno: "));
+                    Console.Write("Reingrese el domicilio: ");
+                    alumnos2.Domicilio = Console.ReadLine();
+                    Console.Write("Reingrese la fecha de nacimiento (Recuerde ingresar las barras. Ej: 00/00/0000): ");
+                    alumnos2.fechaNacimiento = Convert.ToDateTime(Console.ReadLine());
+                    alumnos.Remove(BuscarAlumno(numerodni));
+                    alumnos.Add(alumnos2);
+                    GuardarAlumnosEnArchivo();
+                    Console.WriteLine($"Alumno modificado exitosamente.\n----------------------------------------------------------------");
                 }
-                if (existe)
+                else
                 {
-                    Console.Write($"El alumno a modificar es {alumnos2.Apellido} {alumnos2.Nombre}? S/N");
-                    respuesta = Console.ReadLine();
-                    if ((respuesta == "s") || (respuesta == "S"))
-                    {
-                        Console.WriteLine("Reingrese el nombre del alumno: ");
-                        alumnos2.Nombre = Console.ReadLine();
-                        Console.WriteLine("Reingrese el apellido: ");
-                        alumnos2.Apellido = Console.ReadLine();
-                        Console.WriteLine("Reingrese el domicilio: ");
-                        alumnos2.Domicilio = Console.ReadLine();
-                        Console.WriteLine("Reingrese la fecha de nacimiento (Recuerde ingresar las barras. Ej: 00/00/0000: ");
-                        alumnos2.fechaNacimiento = Convert.ToDateTime(Console.ReadLine());
-                        alumnos.Add(alumnos2);
-
-                    }
-                    else
-                    {
-                        alumnos.Add(alumnos2);
-                    }
-
+                    alumnos.Add(alumnos2);
+                    GuardarAlumnosEnArchivo();
+                    Console.WriteLine($"El alumno no se ha modificado.\n----------------------------------------------------------------------------------");
                 }
-
-
-                GuardarAlumnosEnArchivo();
 
             }
-
+            Console.WriteLine();
         }
+    
+        
 
 
         static void ModificarMateria()
         {
-
+            Console.WriteLine("Ingrese el nombre de la materia que desea modificar: ");
+            string nombreMateria = Console.ReadLine();
+            CargarMateriaDesdeArchivo();
+            Materia materia2 = BuscarMateria(nombreMateria);
+            if (ExisteMateria(nombreMateria))
+            {
+                Console.Write($"La materia a modificar es {materia2.nombreMateria}? S/N: ");
+                string respuesta = Console.ReadLine();
+                if ((respuesta == "s") || (respuesta == "S"))
+                {
+                    Console.Write("Reingrese el nombre de la materia: ");
+                    materia2.nombreMateria = Console.ReadLine();
+                    materias.Remove(BuscarMateria(nombreMateria));
+                    materias.Add(materia2);
+                    GuardarMateriaEnArchivo();
+                    Console.WriteLine($"Materia modificada exitosamente.\n----------------------------------------------------------------");
+                }
+                else
+                {
+                    materias.Add(materia2);
+                    GuardarMateriaEnArchivo();
+                    Console.WriteLine($"La materia no se ha modificado.\n----------------------------------------------------------------------------------");
+                }
+            }
+            Console.WriteLine();
         }
 
 
-        public static List<Alumno> RetornarListaAlumnos(string archivo)
+        /*public static List<Alumno> RetornarListaAlumnos(string archivo)
         {
             List<Alumno> listaAlumnos = new List<Alumno>();
             using (StreamReader sr = new StreamReader(archivo))
@@ -440,19 +514,18 @@ namespace ProyectoFinal_CordobaIsmael2
                 }
             }
             return listaAlumnos;
-        }
+        }*/
 
         public static void MostrarAlumnosActivos()
         {
-            List<Alumno> ListaActualizada = RetornarListaAlumnos(archivo);
+            CargarAlumnosDesdeArchivo();
             Console.WriteLine("Los alumnos activos actualmente son: ");
-            for (int i = 0; i < ListaActualizada.Count; i++)
+            for (int i = 0; i < alumnos.Count; i++)
             {
-                if (ListaActualizada[i].estaActivo)
+                if (alumnos[i].estaActivo)
                 {
-                    Console.WriteLine(ListaActualizada[i].Legajo + ", " + ListaActualizada[i].Nombre + ", " + ListaActualizada[i].Apellido);
+                    Console.WriteLine(alumnos[i].Legajo + ", " + alumnos[i].Nombre + ", " + alumnos[i].Apellido);
                 }
-
             }
             Console.WriteLine($"--------------------------------------------------------------------------------------\n");
         }
@@ -460,16 +533,14 @@ namespace ProyectoFinal_CordobaIsmael2
 
         public static void MostrarAlumnosInactivos()
         {
-            RetornarListaAlumnos(archivo);
+            CargarAlumnosDesdeArchivo();
             Console.WriteLine("Los alumnos activos actualmente son: ");
             for (int i = 0; i < alumnos.Count; i++)
             {
-                bool alumnoEncontrado = alumnos[i].estaActivo;
-                if (!alumnoEncontrado)
+                if (alumnos[i].estaActivo == false)
                 {
                     Console.WriteLine(alumnos[i].Legajo + ", " + alumnos[i].Nombre + ", " + alumnos[i].Apellido);
                 }
-
             }
             Console.WriteLine($"--------------------------------------------------------------------------------------\n");
 
@@ -478,6 +549,7 @@ namespace ProyectoFinal_CordobaIsmael2
 
         static void CargarAlumnosEnMaterias()
         {
+            alumnosEnMaterias.Clear();
             if (File.Exists(archivo3))
             {
                 string[] lineas = File.ReadAllLines(archivo3);
@@ -490,7 +562,7 @@ namespace ProyectoFinal_CordobaIsmael2
                         IndiceAlumno = Convert.ToInt32(separador[1]),
                         IndiceMateria = Convert.ToInt32(separador[2]),
                         Estado = separador[3],
-                        Nota = Convert.ToInt32(separador[4]),
+                        Nota = separador[4],
                         Fecha = Convert.ToDateTime(separador[5]),
                         
                     };
@@ -501,44 +573,73 @@ namespace ProyectoFinal_CordobaIsmael2
 
         static void AnotarAlumnoMateria()
         {
+            string nombreMateria, estadoMateria, respuesta, respuesta2;
+            int nota = 0;
+            DateTime fechaExamen;
             int dni = LeerEntero("ingrese el dni del alumno que desea anotar en una materia: ");
             CargarAlumnosDesdeArchivo();
             CargarMateriaDesdeArchivo();
             CargarAlumnosEnMaterias();
-            int legajoAlumno=-1;
-            int indiceMateria;
-            for (int i = 0; i < alumnos.Count; i++)
+            while (!ExisteAlumno(dni))
             {
-                if (alumnos[i].DNI == Convert.ToString(dni))
-                {
-                    legajoAlumno = alumnos[i].Legajo;
-                }
+                Console.Write("ERROR: No existe un alumno inscripto con ese DNI. Intente de nuevo: ");
             }
-            Console.Write("Ingrese la materia en la que desea inscribir al alumno: ");
-            string nombreMateria = Console.ReadLine();
-            /*
-            for (int i = 0; i < materias.Count; i++)
+            if (BuscarAlumno(dni).estaActivo == false)
             {
-                if (materias[i].nombreMateria == nombreMateria)
-                {
-                    indiceMateria = materias[i].indiceMateria;
-                }
+                Console.WriteLine("El alumno que desea anotar esta inactivo. Pr favor, activelo e intente nuevamente.\n -------------------------------------------------------------------------\n");
             }
-            int indiceAlumnoMateria = alumnosEnMaterias.Count + 1;
-            AlumnoMateria materiaAlumno = new()
-            {
-                IndiceAlumnoMateria = indiceAlumnoMateria,
-                IndiceAlumno = legajoAlumno,
-                IndiceMateria = indiceMateria,
-                Estado = separador[3],
-                Nota = Convert.ToInt32(separador[4]),
-                Fecha = Convert.ToDateTime(separador[5]),
 
-            };
-            alumnosEnMaterias.Add(materiaAlumno);
-            */
+            Console.Write("Ingrese el nombre de la materia en la que desea anotar al alumno: ");
+            nombreMateria = Console.ReadLine();
+            while (!ExisteMateria(nombreMateria))
+            {
+                Console.WriteLine("No existe una materia registrada con ese nombre. Por favor, intente de nuevo: ");
+            }
+            if (BuscarMateria(nombreMateria).estaActiva == false)
+            {
+                Console.WriteLine("La materia que ingresó está inactiva. Por favor, activela e intente nuevamente.\n-------------------------------------------------------------------------------\n");
+            }
+            for (int i = 0; i < alumnosEnMaterias.Count; i++)
+            {
+                if (BuscarAlumno(dni).Legajo == alumnosEnMaterias[i].IndiceAlumno && BuscarMateria(nombreMateria).indiceMateria == alumnosEnMaterias[i].IndiceMateria)
+                {
+                    Console.WriteLine($"ERROR: El alumno ya esta inscripto en la materia.\n-----------------------------------------------------------------------------");
+                }
+
+            }
+            Console.Write("Cual es el estado del alumno en cuanto a la materia? (Anotado, Cursado, Aprobado, Desaprobado): ");
+            estadoMateria = Console.ReadLine();
+            Console.Write("El alumno rindió examen final? S/N: ");
+            respuesta2 = Console.ReadLine();
+            if (respuesta2 == "s" || respuesta2 == "S")
+            {
+                nota = LeerEntero("Ingrese la nota del examen: ");
+                Console.Write("Ingrese la fecha en la que rindió el examen (Recuerde usar las barras. (Ej: 00/00/0000): ");
+                fechaExamen = Convert.ToDateTime(Console.ReadLine());
+                int nuevoIndice = alumnosEnMaterias.Count + 1;
+                AlumnoMateria nuevoAlumno = new()
+                {
+                    IndiceAlumno = BuscarAlumno(dni).Legajo,
+                    IndiceMateria = BuscarMateria(nombreMateria).indiceMateria,
+                    IndiceAlumnoMateria = nuevoIndice,
+                    Estado = estadoMateria,
+                    Nota = Convert.ToString(nota),
+                    Fecha = fechaExamen,
+                };
+                alumnosEnMaterias.Add(nuevoAlumno);
+                Console.WriteLine();
+                GuardarAlumnoMateriaEnArchivo();
+            }
+            
+
+
+
+
 
         }
+
+        
+
 
         static int ValidarNumeroMenu()
         {
