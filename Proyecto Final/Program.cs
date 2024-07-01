@@ -113,7 +113,7 @@ namespace ProyectoFinal
             return materiaExistente;
         }
 
-
+        
         static Materia BuscarMateria(string nombreDeMateria)
         {
             Materia materiaEncontrada = new Materia();
@@ -132,6 +132,21 @@ namespace ProyectoFinal
                 i++;
             }
             return materiaEncontrada;
+        }
+
+        static bool ExisteAlumnoMateria(int dni, string nombreDeMateria)
+        {
+            bool alumnomMateriaExistente = false;
+            int i = 0;
+            while (!alumnomMateriaExistente && i < materias.Count)
+            {
+                if (int.Parse(alumnos[i].DNI) == dni && materias[i].nombreMateria == nombreDeMateria)
+                {
+                    alumnomMateriaExistente = true;
+                }
+                i++;
+            }
+            return alumnomMateriaExistente;
         }
 
 
@@ -599,14 +614,38 @@ namespace ProyectoFinal
             {
                 Console.WriteLine("La materia que ingresó está inactiva. Por favor, activela e intente nuevamente.\n-------------------------------------------------------------------------------\n");
             }
+            
             for (int i = 0; i < alumnosEnMaterias.Count; i++)
             {
                 if (BuscarAlumno(dni).Legajo == alumnosEnMaterias[i].IndiceAlumno && BuscarMateria(nombreMateria).indiceMateria == alumnosEnMaterias[i].IndiceMateria)
                 {
-                    Console.WriteLine($"ERROR: El alumno ya esta inscripto en la materia.\n-----------------------------------------------------------------------------");
+                    Console.WriteLine($"El alumno ya esta inscripto en la materia. Que accion desea realizar?");
+                    Console.WriteLine("1) Modificar.");
+                    Console.WriteLine("2) Eliminar.");
+                    Console.WriteLine("0) Cancelar.");
+                    int leerRespuesta = LeerEntero("Elija una opción: ");
+                    if (leerRespuesta >= 0 && leerRespuesta <= 2)
+                    {
+                        if (leerRespuesta == 1)
+                        {
+                            AlumnoMateria alumno2 = alumnosEnMaterias[i];
+                            Console.Write("Reingrese el estado del alumno (Aprobado, desaprobado, anotado, cursado): ");
+                            alumno2.Estado = Console.ReadLine();
+                            Console.Write("Reingrese la nota del alumno (Si no rindió examen final, ingrese un guion [-]): ");
+                            alumno2.Nota = Console.ReadLine();
+                            Console.Write("Reingrese la fecha de examen, recuerde usar las barras. Ej: dd/mm/aaaa. (Si no rindió examen final, ingrese [00/00/0000]): ");
+                            alumno2.Fecha = Convert.ToDateTime(Console.ReadLine());
+                            alumnosEnMaterias.Add(alumno2);
+                            alumnosEnMaterias.Remove(alumnosEnMaterias[i]);
+                            GuardarAlumnoMateriaEnArchivo();
+                        }
+                    }
+
                 }
 
             }
+
+
             Console.Write("Cual es el estado del alumno en cuanto a la materia? (Anotado, Cursado, Aprobado, Desaprobado): ");
             estadoMateria = Console.ReadLine();
             Console.Write("El alumno rindió examen final? S/N: ");
@@ -629,13 +668,28 @@ namespace ProyectoFinal
                 alumnosEnMaterias.Add(nuevoAlumno);
                 Console.WriteLine();
                 GuardarAlumnoMateriaEnArchivo();
+                Console.WriteLine("Alumno anotado correctamente en la materia.\n---------------------------------------------------------------------------------------");
             }
-            
-
-
-
-
-
+            else
+            {
+                DateTime fecha = Convert.ToDateTime("00/00/0000");
+                string sinNota = "-";
+                int nuevoIndice = alumnosEnMaterias.Count + 1;
+                AlumnoMateria nuevoAlumno = new()
+                {
+                    IndiceAlumno = BuscarAlumno(dni).Legajo,
+                    IndiceMateria = BuscarMateria(nombreMateria).indiceMateria,
+                    IndiceAlumnoMateria = nuevoIndice,
+                    Estado = estadoMateria,
+                    Nota = sinNota,
+                    Fecha = fecha,
+                };
+                alumnosEnMaterias.Add(nuevoAlumno);
+                Console.WriteLine();
+                GuardarAlumnoMateriaEnArchivo();
+                Console.WriteLine("Alumno anotado correctamente en la materia.\n---------------------------------------------------------------------------------------");
+            }
+            Console.WriteLine();
         }
 
         
